@@ -1,72 +1,123 @@
-//Falcon
-
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems;
 
-//import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-//import frc.robot.Constants;
 
-//import com.revrobotics.RelativeEncoder;
-//import com.revrobotics.SparkMaxPIDController;
-//import com.revrobotics.CANSparkMax.ControlType;
-//import com.revrobotics.CANSparkMax;
-//import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkMaxPIDController;
+import com.revrobotics.CANSparkMax.ControlType;
+import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 public class IntakeSubsystem extends SubsystemBase {
   /** Creates a new IntakeSubsystem. */
-  //private static final int deviceID = 1;
-  //private CANSparkMax m_motor;
-  //private SparkMaxPIDController m_pidController;
-  //private RelativeEncoder m_encoder;
+  private static final int deviceID = 1;
+  private TalonFX m_motor;
+  private SparkMaxPIDController m_pidController;
+  private RelativeEncoder m_encoder;
   public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, maxRPM;
+  
+  public IntakeSubsystem() {
+    // initialize motor
+    m_motor = new TalonFX(4);
+    /**
+     * The restoreFactoryDefaults method can be used to reset the configuration parameters
+     * in the SPARK MAX to their factory default state. If no argument is passed, these
+     * parameters will not persist between power cycles
+     */
+    //m_motor.restoreFactoryDefaults();
 
-  public class Gains {
-    public final double kP;
-    public final double kI;
-    public final double kD;
-    public final double kF;
-    public final int kIzone;
-    public final double kPeakOutput;
-    
-    public Gains(double _kP, double _kI, double _kD, double _kF, int _kIzone, double _kPeakOutput){
-      kP = _kP;
-      kI = _kI;
-      kD = _kD;
-      kF = _kF;
-      kIzone = _kIzone;
-      kPeakOutput = _kPeakOutput;
-    }
+    /**
+     * In order to use PID functionality for a controller, a SparkMaxPIDController object
+     * is constructed by calling the getPIDController() method on an existing
+     * CANSparkMax object
+     */
+    m_pidController = m_motor.getPIDController();
 
-  class Constants {
-    /**
-     * Which PID slot to pull gains from. Starting 2018, you can choose from
-     * 0,1,2 or 3. Only the first two (0,1) are visible in web-based
-     * configuration.
-     */
-    public static final int kSlotIdx = 0;
-  
-    /**
-     * Talon FX supports multiple (cascaded) PID loops. For
-     * now we just want the primary one.
-     */
-    public static final int kPIDLoopIdx = 0;
-  
-    /**
-     * Set to zero to skip waiting for confirmation, set to nonzero to wait and
-     * report to DS if action fails.
-     */
-      public static final int kTimeoutMs = 30;
-  
-    /**
-     * PID Gains may have to be adjusted based on the responsiveness of control loop.
-       * kF: 1023 represents output value to Talon at 100%, 20660 represents Velocity units at 100% output
-       * 
-     * 	                                    			  kP   	 kI    kD      kF          Iz    PeakOut */
-     public final Gains kGains_Velocit  = new Gains( 0.1, 0.001, 0, 1023.0/20660.0,  300,  1.00);
-    }
+    // Encoder object created to display position values
+    m_encoder = m_motor.getEncoder();
+
+    // PID coefficients
+    kP = 0.0001; 
+    kI = 0.000001;
+    kD = 0; 
+    kIz = 0; 
+    kFF = 0; 
+    kMaxOutput = 0.2; 
+    kMinOutput = -1;
+    maxRPM = 100;
+
+
+    // set PID coefficients
+    m_pidController.setP(kP);
+    m_pidController.setI(kI);
+    m_pidController.setD(kD);
+    m_pidController.setIZone(kIz);
+    m_pidController.setFF(kFF);
+    m_pidController.setOutputRange(kMinOutput, kMaxOutput);
+
+    // display PID coefficients on SmartDashboard
+    SmartDashboard.putNumber("P Gain", kP);
+    SmartDashboard.putNumber("I Gain", kI);
+    SmartDashboard.putNumber("D Gain", kD);
+    SmartDashboard.putNumber("I Zone", kIz);
+    SmartDashboard.putNumber("Feed Forward", kFF);
+    SmartDashboard.putNumber("Max Output", kMaxOutput);
+    SmartDashboard.putNumber("Min Output", kMinOutput);
+    SmartDashboard.putNumber("Set Rotations", maxRPM);
+  }
+
+  @Override
+  public void periodic() {
+    // This method will be called once per scheduler run
+     // read PID coefficients from SmartDashboard
+     double p = SmartDashboard.getNumber("P Gain", 0);
+     double i = SmartDashboard.getNumber("I Gain", 0);
+     double d = SmartDashboard.getNumber("D Gain", 0);
+     double iz = SmartDashboard.getNumber("I Zone", 0);
+     double ff = SmartDashboard.getNumber("Feed Forward", 0);
+     double max = SmartDashboard.getNumber("Max Output", 0);
+     double min = SmartDashboard.getNumber("Min Output", 0);
+     double rotations = SmartDashboard.getNumber("Set Rotations", 0);
+ 
+     // if PID coefficients on SmartDashboard have changed, write new values to controller
+     if(p != kP) { 
+       m_pidController.setP(p); 
+       kP = p; 
+      }
+     if(i != kI) { 
+       m_pidController.setI(i); 
+       kI = i; 
+      }
+     if(d != kD) { 
+       m_pidController.setD(d); 
+       kD = d; 
+      }
+     if(iz != kIz) { 
+       m_pidController.setIZone(iz); 
+       kIz = iz; 
+      }
+     if(ff != kFF) { 
+       m_pidController.setFF(ff); 
+       kFF = ff; 
+      }
+     if(max != kMaxOutput || min != kMinOutput) { 
+       m_pidController.setOutputRange(min, max); 
+       kMinOutput = min; kMaxOutput = max; 
+     }
+
+     m_pidController.setReference(maxRPM, ControlType.kVelocity);
+     double velocity = m_encoder.getVelocity(); 
+     SmartDashboard.putNumber("RPM Variable", velocity); 
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    // This method will be called once per scheduler run during simulation
   }
 }
