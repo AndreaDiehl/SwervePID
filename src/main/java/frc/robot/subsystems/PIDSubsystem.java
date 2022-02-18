@@ -1,20 +1,20 @@
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
- 
+
 package frc.robot.subsystems;
- 
+
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
- 
+
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
- 
+
 public class PIDSubsystem extends SubsystemBase {
   /** Creates a new ExampleSubsystem. */
   private static final int deviceID = 1;
@@ -24,8 +24,9 @@ public class PIDSubsystem extends SubsystemBase {
   private DigitalInput xSensor;
   private DigitalInput ySensor;
   private int m_rotations;
-  public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, maxRPM;
   
+  public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, maxRPM, setRPM;
+
   public PIDSubsystem() {
     // initialize motor
     m_motor = new CANSparkMax(2, MotorType.kBrushless);
@@ -34,6 +35,15 @@ public class PIDSubsystem extends SubsystemBase {
     m_rotations = m_encoder.getCountsPerRevolution();
     
 
+    // ySensor = new DigitalInput(1);
+    SmartDashboard.putBoolean("Sensor Value", xSensor.get());
+    /**
+     * The restoreFactoryDefaults method can be used to reset the configuration
+     * parameters
+     * in the SPARK MAX to their factory default state. If no argument is passed,
+     * these
+     * parameters will not persist between power cycles
+     */
     m_motor.restoreFactoryDefaults();
 
     /**
@@ -144,5 +154,3 @@ public class PIDSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run during simulation
   }
 }
- 
-
