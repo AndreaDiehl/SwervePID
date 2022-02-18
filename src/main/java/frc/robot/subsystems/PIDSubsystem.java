@@ -126,9 +126,10 @@ public class PIDSubsystem extends SubsystemBase {
       kMaxOutput = max;
     }
 
-    if (ySensor.get()) {
-      m_pidController.setReference(0, ControlType.kVelocity);
-    } else if(xSensor.get()){
+    //if (ySensor.get()) {
+    //  m_pidController.setReference(0, ControlType.kVelocity);
+    //} else 
+    if(xSensor.get()){
       m_pidController.setReference(200, ControlType.kVelocity);
     } else{
       m_pidController.setReference(0, ControlType.kVelocity);
